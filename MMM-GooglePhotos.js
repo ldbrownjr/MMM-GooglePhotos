@@ -3,7 +3,7 @@
 //
 Module.register("MMM-GooglePhotos", {
   defaults: {
-    albumId: "", // your album id from result of `auth_and_test.js`
+    albumId:[], // your album id(s) from result of `auth_and_test.js`
     refreshInterval: 1000*60,  // too short refreshing might cause API quota limit. Under 10sec will exhaust your quota(usually total <25000 per day).
     scanInterval: 1000*60*60, // too many scans might cause API quota limit also.
     sort: "time", //'time', 'reverse', 'random'
