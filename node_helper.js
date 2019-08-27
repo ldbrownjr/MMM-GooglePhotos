@@ -47,6 +47,7 @@ module.exports = NodeHelper.create({
     var auth = new Auth(this.authConfig)
     auth.on('ready', (client) => {
       this.accessToken = client.credentials.access_token
+      console.log("[GPHOTO] ACCESSTOKEN:", this.accessToken)
       this.getPhotos()
     })
 
@@ -55,6 +56,7 @@ module.exports = NodeHelper.create({
   socketNotificationReceived: function (notification, payload) {
     switch(notification) {
       case 'INIT':
+        console.log("[GPHOTO] Initialized")
         this.initializeAfterLoading(payload)
         this.sendSocketNotification('INITIALIZED')
         break
@@ -87,6 +89,7 @@ module.exports = NodeHelper.create({
     }
     var self = this
     function getItems(options) {
+      console.log("[GPHOTO] getItems() executed.")
       request.post(options, (err, res, body) => {
         if (err) {
           console.log("Error:", err)
@@ -107,11 +110,13 @@ module.exports = NodeHelper.create({
               "width": mediaItems[i].mediaMetadata.width,
               "height": mediaItems[i].mediaMetadata.height
             }
+            console.log("[GPHOTO] Item found:", item.id)
             self.tempItems.push(item)
           }
         }
         if (found > 0 && body.nextPageToken) {
           options.form.pageToken = body.nextPageToken
+          console.log("[GPHOTO] NextPage exists, Scan more.")
           getItems(options)
         } else {
           self.finishedScan()
@@ -188,7 +193,7 @@ module.exports = NodeHelper.create({
 */
   getPhoto: function() {
     if (this.items.length <= 0) {
-      console.log("There is no scanned photo currently.")
+      console.log("[GPHOTO] There is no scanned photo currently.")
       return
     }
     var photo = null
@@ -198,7 +203,7 @@ module.exports = NodeHelper.create({
       photo = this.items[0]
       this.index = 0
     }
-    //console.log("photo", this.index, this.items.id)
+    console.log("[GPHOTO] Photo ready:", this.index, photo.id)
     this.index++
 
     var payload = {
@@ -208,13 +213,14 @@ module.exports = NodeHelper.create({
       "width": photo.width,
       "height": photo.height
     }
-    //console.log("image", photo.baseUrl)
+    console.log("[GPHOTO] Photo data will be forwareded to Front:", photo.id)
     this.sendSocketNotification("NEW_IMAGE", payload)
   },
 
 
 
   broadcast: function() {
+    console.log("[GPHOTO] Prepare Photo for Front")
     this.getPhoto()
     var timer = setTimeout(()=>{
       this.broadcast()

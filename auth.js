@@ -20,11 +20,11 @@ function Auth(config) {
 
   // make sure we have a key file to read from
   if (config.keyFilePath === undefined) {
-    throw new Error('Missing "keyFilePath" from config (should be where your JSON file is)');
+    throw new Error('[GPHOTO_AUTH] Missing "keyFilePath" from config (should be where your JSON file is)');
   }
 
   if (config.savedTokensPath === undefined) {
-    throw new Error('Missing "savedTokensPath" from config (this is where your OAuth2 access tokens will be saved)');
+    throw new Error('[GPHOTO_AUTH] Missing "savedTokensPath" from config (this is where your OAuth2 access tokens will be saved)');
     return;
   }
 
@@ -34,24 +34,26 @@ function Auth(config) {
 
   const saveTokens = (first = false) => {
     oauthClient.setCredentials(tokens);
-
     var expired = false
     var now = Date.now()
-
+    var exp_date = new Date(tokens.expiry_date)
+    console.log("[GPHOTO_AUTH] Token expiry date:", exp_date.toString())
     if (tokens.expiry_date < Date.now()) {
+      console.log("[GPHOTO_AUTH] Token is expired.")
       expired = true
     }
-
     if (expired || first) {
       oauthClient.refreshAccessToken().then((tk)=>{
         tokens = tk.credentials
         // save them for later
         mkdirp(path.dirname(config.savedTokensPath), () => {
+          console.log("[GPHOTO_AUTH] Token rewrited.(new or expired)")
           fs.writeFile(config.savedTokensPath, JSON.stringify(tokens), () => {});
           this.emit('ready', oauthClient)
         })
       })
     } else {
+      console.log("[GPHOTO_AUTH] Token is still alive.")
       this.emit('ready', oauthClient);
     }
   };
@@ -65,7 +67,7 @@ function Auth(config) {
     // open the URL
     console.log('Opening OAuth URL.(' + url + ') Return here with your code.');
     opn(url).catch(() => {
-      console.log('Failed to automatically open the URL. Copy/paste this in your browser:\n', url);
+      console.log('Failed to open the URL automatically. Copy/paste this in your browser:\n', url);
     });
 
     // if tokenInput is configured
@@ -86,11 +88,14 @@ function Auth(config) {
   };
 
   const processTokens = (oauthCode) => {
-    if (!oauthCode) process.exit(-1);
+    if (!oauthCode) {
+      console.log("[GPHOTO_AUTH] OAuth code problem")
+      process.exit(-1)
+    }
     // get our tokens to save
     oauthClient.getToken(oauthCode, (error, tkns) => {
       // if we didn't have an error, save the tokens
-      if (error) throw new Error('Error getting tokens:', error);
+      if (error) throw new Error('[GPHOTO_AUTH] Error getting tokens:', error);
       tokens = tkns;
       saveTokens(true);
     });
