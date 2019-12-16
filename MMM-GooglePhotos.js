@@ -1,6 +1,22 @@
 //
 // MMM-GooglePhotos
 //
+
+function createImage(image, url) {
+    image.style.backgroundImage = "unset";
+    image.style.backgroundImage = "url('" + url + "')";
+    image.style.opacity = this.config.opacity;
+    if (this.config.mode == "hybrid") {
+      var rect = image.getBoundingClientRect();
+      var rr = ((rect.width / rect.height) > 1) ? "h" : "v";
+      var ir = ((payload.width / payload.height) > 1) ? "h" : "v";
+      image.style.backgroundSize = (rr == ir) ? "cover" : "contain";
+    } else {
+      image.style.backgroundSize = this.config.mode;
+    }
+    return image;
+}
+
 Module.register("MMM-GooglePhotos", {
   defaults: {
     albumId: "", // your album id from result of `auth_and_test.js`
@@ -37,20 +53,9 @@ Module.register("MMM-GooglePhotos", {
   showImage: function(payload) {
     var url = payload.url
     var image = document.getElementById("GPHOTO")
-    image.style.opacity = 0
-    setTimeout(()=>{
-      image.style.backgroundImage = "unset"
-      image.style.backgroundImage = "url('" + url + "')"
-      image.style.opacity = this.config.opacity;
-      if (this.config.mode == "hybrid") {
-        var rect = image.getBoundingClientRect()
-        var rr = ((rect.width / rect.height) > 1) ? "h" : "v"
-        var ir = ((payload.width / payload.height) > 1) ? "h" : "v"
-        image.style.backgroundSize = (rr == ir) ? "cover" : "contain"
-      } else {
-        image.style.backgroundSize = this.config.mode
-      }
-    }, 2000)
+    // image.style.opacity = 0
+
+    setTimeout(createImage, 30000, image, url)
 
   },
 
